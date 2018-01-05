@@ -38,7 +38,42 @@ from collections import OrderedDict
 #
 #
 
-def get_color_dict(results, techs):
+def dispatch_daily_mean(results):
+    """
+    """
+
+    # only Germany atm
+    idx = pd.IndexSlice
+    subset = results.loc[idx['DE_bus_el', ['to_bus', 'from_bus'], :, :], :]
+    subset = subset.unstack(level=['type', 'obj_label'])
+    subset.index = subset.index.droplevel('bus_label')
+    subset.columns = subset.columns.droplevel([0, 1])
+
+    fuels = ['run_of_river', 'biomass', 'solar', 'wind', 'uranium', 'lignite',
+            'hard_coal', 'gas', 'mixed_fuels', 'oil', 'shortage', 'load',
+            'excess']
+
+    df = pd.DataFrame(index=subset.index)
+
+    for f in fuels:
+        cols = [c for c in subset.columns if f in c]
+        df[f] = subset[cols].sum(axis=1)
+
+    index = df.asfreq('1D').index
+    df = df.groupby(lambda x: x.strftime('%m%d')).mean()
+    df = df / 1000
+    df.index = index
+
+    layout = go.Layout(xaxis=dict(title='Date'),
+                    yaxis=dict(title='Daily mean power production in GW'))
+
+    fig = df.iplot(kind='area', fill=True, asFigure=True, mode='none', layout=layout)
+    div = plotly.offline.plot(fig, include_plotlyjs=False, output_type='div')
+
+    return div
+
+
+def get_color_dict(results):
     """ """
 
     cdict = {'biomass':'green',
@@ -67,6 +102,7 @@ def get_color_dict(results, techs):
                 label_to_color[i] = 'grey'
 
     return label_to_color
+
 
 def get_countrycodes_techs(results):
     """
@@ -188,6 +224,7 @@ def plot_hourly_dispatch(timelines, colors):
     Series: series of plotly div. for each country
     """
     div = pd.Series(index=timelines.keys())
+
     for cc in timelines.keys():
         layout = go.Layout(
             title='Hourly Dispatch ' + cc,
