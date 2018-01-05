@@ -37,24 +37,36 @@ from collections import OrderedDict
 #
 #
 #
-def get_color_dict(results):
+
+def get_color_dict(results, techs):
     """ """
 
-    cdict = {'biomass': '#42c77a',
-             'gas': '#20b4b6',
-             'lignite': '#20b4b6',
-             'uranium': '#12341f',
-             'onshore': '#5b5bae'}
+    cdict = {'biomass':'green',
+              'coal':'black',
+              'gas':'orange',
+              'eeg_gas':'olive',
+              'geothermal':'purple',
+              'lignite':'brown',
+              'oil':'darkgrey',
+              'other_non_renewable':'pink',
+              'reservoir':'navy',
+              'run_of_river':'aqua',
+              'storage':'steelblue',
+              'solar':'yellow',
+              'uranium':'lime',
+              'onshore':'skyblue',
+              'offshore':'royalblue',
+              'hydro':'aqua'}
 
     label_to_color = {}
-
-    for i in results.index.get_level_values('obj_label').unique():
+    for i in techs:
         for k, v in cdict.items():
             if k in i:
                 label_to_color[i] = v
+        if i not in label_to_color:
+                label_to_color[i] = 'grey'
 
     return label_to_color
-
 
 def get_countrycodes_techs(results):
     """
@@ -168,7 +180,7 @@ def get_transmission(results):
     return transmission
 
 
-def plot_hourly_dispatch(timelines):
+def plot_hourly_dispatch(timelines, colors):
     """
 
     Returns
@@ -176,7 +188,6 @@ def plot_hourly_dispatch(timelines):
     Series: series of plotly div. for each country
     """
     div = pd.Series(index=timelines.keys())
-
     for cc in timelines.keys():
         layout = go.Layout(
             title='Hourly Dispatch ' + cc,
@@ -191,7 +202,7 @@ def plot_hourly_dispatch(timelines):
         # two lines below work, but do't show stacked numbers instead of single numbers when hovered with mouse.
         # compare last entry in: https://plot.ly/python/filled-area-plots/#stacked-area-chart-with-original-values
         try:
-            fig = timelines[cc].iplot(kind='area', fill=True, asFigure=True, mode='none', layout=layout)
+            fig = timelines[cc].iplot(kind='area', fill=True, asFigure=True, mode='none', layout=layout, color=colors)
             div[cc] = plotly.offline.plot(fig, include_plotlyjs=False, output_type='div')
         except:
             print(cc + ' could not be plotted.')
@@ -252,7 +263,7 @@ def plot_gen_load_prices(timelines, load, prices):
         )
 
         layout = go.Layout(
-            title='Generation/Load and Electricity Prices',
+            title='Generation/Load and Electricity Prices ' + cc,
             yaxis=dict(
                 title='Generation/Load in MW'
             ),
@@ -268,7 +279,7 @@ def plot_gen_load_prices(timelines, load, prices):
 
     return div
 
-def plot_yearly_sums(timelines, techs):
+def plot_yearly_sums(timelines, techs, colors):
     """
 
     Returns
@@ -279,7 +290,7 @@ def plot_yearly_sums(timelines, techs):
     sums = pd.DataFrame(index=techs, columns=countrycodes)
     for cc in countrycodes:
         sums[cc] = timelines[cc].sum()
-    sums = sums.T
+    sums = sums.T.dropna(axis=1, how='all')
     layout = go.Layout(
         title='Yearly Generation per Country',
         xaxis=dict(
@@ -289,7 +300,7 @@ def plot_yearly_sums(timelines, techs):
             title='Generation in MWh'
         )
     )
-    fig = sums.iplot(kind='bar', barmode='stack', asFigure=True, layout=layout)
+    fig = sums.iplot(kind='bar', barmode='stack', asFigure=True, layout=layout, color=colors)
     div = plotly.offline.plot(fig, include_plotlyjs=False, output_type='div')
     return div
 

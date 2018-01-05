@@ -50,9 +50,10 @@ def html_report(rdf, path='.', fname='report.html'):
     load = get_load(rdf, countrycodes)
     timelines = get_hourly_dispatch(countrycodes, techs, rdf)
     transmission = get_transmission(rdf)
-    plots.extend(plot_hourly_dispatch(timelines).tolist())
+    colors = get_color_dict(results, techs)
+    plots.extend(plot_hourly_dispatch(timelines, colors).tolist())
     plots.extend(plot_gen_load_prices(timelines, load, prices).tolist())
-    plots.append(plot_yearly_sums(timelines, techs))
+    plots.append(plot_yearly_sums(timelines, techs, colors))
     plots.append(plot_transmission(transmission, countrycodes))
 
     head = """ <html><head>
