@@ -96,13 +96,12 @@ class Reservoir(GenericStorage, Facade):
         # TODO: Ensure automatic adding of
         water = Bus(label="water-bus-" + self.label)
         water_inflow = Source(
-            label="water-inflow" + self.label,
+            label="water-inflow-" + self.label,
             outputs={
-                water: Flow(nominal_value=max(self.inflow),
-                            #i/max(self.inflow) for i in self.inflow
-                            actual_value=[1])})
+                water: Flow(nominal_value=1,
+                            actual_value=self.inflow)})
         if self.spillage:
-            water_spillage = Sink(label="water-spillage" + self.label,
+            water_spillage = Sink(label="water-spillage-" + self.label,
                                   inputs={water: Flow()})
         else:
             water_spillage = None
