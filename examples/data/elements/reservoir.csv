@@ -1,0 +1,2 @@
+name;capacity;type;inflow;efficiency;marginal_cost;bus
+reservoir;5000;reservoir;reservoir-inflow-profile;0.9;0.5;bus0

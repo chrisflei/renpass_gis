@@ -1,0 +1,207 @@
+{
+    "profile": "tabular-data-package",
+    "resources": [
+        {
+            "name": "reservoir",
+            "path": "data/elements/reservoir.csv",
+            "profile": "tabular-data-resource",
+            "format": "csv",
+            "encoding": "utf-8",
+            "schema": {
+                "fields": [
+                    {
+                        "type": "string",
+                        "name": "name",
+                        "format": "default"
+                    },
+                    {
+                        "type": "number",
+                        "name": "capacity",
+                        "format": "default"
+                    },
+                    {
+                        "type": "string",
+                        "name": "type",
+                        "format": "default"
+                    },
+		    {
+			"type": "string",
+			"name": "inflow",
+			"format": "default"
+		    },
+                    {
+                        "type": "number",
+                        "name": "efficiency",
+                        "format": "default"
+                    },
+                    {
+                        "type": "number",
+                        "name": "marginal_cost",
+                        "format": "default"
+                    },
+                    {
+                        "type": "string",
+                        "name": "bus",
+                        "format": "default"
+                    }
+                ],
+                "missingValues": [
+                    ""
+                ],
+                "foreignKeys": [
+                    {
+                        "fields": "bus",
+                        "reference": {
+                            "fields": "name",
+                            "resource": "bus"
+                        }
+                    },
+                    {
+                        "fields": "inflow",
+                        "reference": {
+                            "resource": "inflow-profiles"
+                        }
+                    }
+
+                ],
+                "primaryKey": "name"
+            }
+        },
+        {
+            "name": "demand",
+            "path": "data/elements/demands.csv",
+            "profile": "tabular-data-resource",
+            "format": "csv",
+            "encoding": "utf-8",
+            "schema": {
+                "fields": [
+                    {
+                        "type": "string",
+                        "name": "name",
+                        "format": "default"
+                    },
+                    {
+                        "type": "string",
+                        "name": "type",
+                        "format": "default"
+                    },
+                    {
+                        "type": "string",
+                        "name": "bus",
+                        "format": "default"
+                    },
+                    {
+                        "type": "number",
+                        "name": "amount",
+                        "format": "default"
+                    },
+                    {
+                        "type": "string",
+                        "name": "profile",
+                        "format": "default"
+                    }
+                ],
+                "missingValues": [
+                    ""
+                ],
+                "foreignKeys": [
+                    {
+                        "fields": "bus",
+                        "reference": {
+                            "fields": "name",
+                            "resource": "bus"
+                        }
+                    },
+                    {
+                        "fields": "profile",
+                        "reference": {
+                            "resource": "demand-profiles"
+                        }
+                    }
+                ],
+                "primaryKey": "name"
+            }
+        },
+        {
+            "name": "demand-profiles",
+            "path": "data/sequences/demand-profiles.csv",
+            "profile": "tabular-data-resource",
+            "format": "csv",
+            "encoding": "utf-8",
+            "schema": {
+                "fields": [
+                    {
+                        "type": "datetime",
+                        "name": "timeindex",
+                        "format": "default"
+                    },
+                    {
+                        "type": "number",
+                        "name": "electricity-demand-profile",
+                        "format": "default"
+                    }
+                ],
+                "missingValues": [
+                    ""
+                ],
+                "primaryKey": "timeindex"
+            }
+        },
+        {
+            "name": "inflow-profiles",
+            "path": "data/sequences/reservoir-inflow-profiles.csv",
+            "profile": "tabular-data-resource",
+            "format": "csv",
+            "encoding": "utf-8",
+            "schema": {
+                "fields": [
+                    {
+                        "type": "datetime",
+                        "name": "timeindex",
+                        "format": "default"
+                    },
+                    {
+                        "type": "number",
+                        "name": "reservoir-inflow-profile",
+                        "format": "default"
+                    }
+                ],
+                "missingValues": [
+                    ""
+                ],
+                "primaryKey": "timeindex"
+            }
+        },
+	{
+            "name": "bus",
+            "path": "data/elements/bus.csv",
+            "profile": "tabular-data-resource",
+            "format": "csv",
+            "encoding": "utf-8",
+            "schema": {
+                "fields": [
+                    {
+                        "type": "string",
+                        "name": "name",
+                        "format": "default"
+                    },
+                    {
+                        "type": "string",
+                        "name": "type",
+                        "format": "default"
+                    },
+		    {
+			"type": "boolean",
+			"name": "balanced",
+			"format": "default"
+		    }
+                ],
+                "missingValues": [
+                    ""
+                ],
+                "primaryKey": "name"
+            }
+        }
+    ]
+}
+
