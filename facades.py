@@ -94,25 +94,27 @@ class Reservoir(GenericStorage, Facade):
             investment = None
 
         # TODO: Ensure automatic adding of
-        water = Bus(label="water-bus-" + self.label)
-        water_inflow = Source(
-            label="water-inflow-" + self.label,
+        reservoir_bus = Bus(label="reservoir-bus-" + self.label)
+        inflow = Source(
+            label="inflow" + self.label,
             outputs={
-                water: Flow(nominal_value=1,
-                            actual_value=self.inflow)})
+                reservoir_bus: Flow(nominal_value=1,
+                            #i/max(self.inflow) for i in self.inflow
+                            actual_value=self.inflow,
+                            fixed=True)})
         if self.spillage:
-            water_spillage = Sink(label="water-spillage-" + self.label,
-                                  inputs={water: Flow()})
+            spillage = Sink(label="spillage" + self.label,
+                                  inputs={reservoir_bus: Flow()})
         else:
             water_spillage = None
 
-        self.inputs.update({water: Flow(investment=investment,
+        self.inputs.update({reservoir_bus: Flow(investment=investment,
                                         **self.input_edge_parameters)})
 
         self.outputs.update({self.bus: Flow(investment=investment,
                                             **self.output_edge_parameters)})
 
-        self.subnodes = (water, water_inflow, water_spillage)
+        self.subnodes = (reservoir_bus, inflow, spillage)
 
 
 class Generator(Source, Facade):
