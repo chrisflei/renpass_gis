@@ -27,6 +27,7 @@ Options:
      --t_start=T_START       Start timestep of simulation [default: 0]
      --t_end=T_END           End timestep of simulation, default is last
                              timestep of datapackage timeindex [default: -1]
+     --backend=BACKEND       Backend model to use [default: ]
 """
 
 from datapackage import Package
@@ -36,10 +37,8 @@ import logging
 import os
 import pandas as pd
 
-import facades
-
+from oemof.network import Bus, Component
 from oemof.tools import logger
-from oemof.solph import Model, EnergySystem, Bus
 from oemof.outputlib import processing, views
 
 try:
@@ -70,25 +69,36 @@ def create_energysystem(datapackage, **arguments):
         Arguments passed from command line
     """
 
+    global backend
+    global Model
+
+    if arguments['--backend'] == 'oemof':
+        from oemof.solph import EnergySystem, Model
+        import facades as backend
+    else:
+        from oemof.energy_system import EnergySystem
+        from model import Model
+        import components as backend
+
     typemap = {
-        'bus': facades.Hub,
-        'extraction-turbine': facades.ExtractionTurbine,
-        'demand': facades.Demand,
-        'generator': facades.Generator,
-        'storage': facades.Storage,
-        'reservoir': facades.Reservoir,
-        'backpressure': facades.Backpressure,
-        'connection': facades.Connection,
-        'conversion': facades.Conversion,
-        'runofriver': facades.Generator,
-        'excess': facades.Excess}
+        'bus': backend.Hub,
+        'extraction-turbine': backend.ExtractionTurbine,
+        'demand': backend.Demand,
+        'generator': backend.Generator,
+        'storage': backend.Storage,
+        'reservoir': backend.Reservoir,
+        'backpressure': backend.Backpressure,
+        'connection': backend.Connection,
+        'conversion': backend.Conversion,
+        'runofriver': backend.Generator,
+        'excess': backend.Excess}
 
     es = EnergySystem.from_datapackage(
         arguments['DATAPACKAGE'],
         attributemap={
-            facades.Demand: {'demand-profiles': 'profile'},
-            facades.Generator: {"generator-profiles": "profile"},
-            facades.RunOfRiver: {"run-of-river-inflows": "inflow"}},
+            backend.Demand: {'demand-profiles': 'profile'},
+            backend.Generator: {"generator-profiles": "profile"},
+            backend.RunOfRiver: {"run-of-river-inflows": "inflow"}},
         typemap=typemap)
 
     es._typemap = typemap
@@ -97,6 +107,7 @@ def create_energysystem(datapackage, **arguments):
 
     es.timeindex = es.timeindex[int(arguments['--t_start']):end]
 
+    #import pdb; pdb.set_trace()
     return es
 
 
@@ -117,7 +128,8 @@ def compute(es=None, **arguments):
 
     logging.info('Model creation time: ' + stopwatch())
 
-    m.receive_duals()
+    if arguments['--backend'] == 'oemof':
+        m.receive_duals()
 
     if arguments['--debug']:
         filename  = 'renpass_model.lp'
@@ -134,7 +146,7 @@ def compute(es=None, **arguments):
 def links(es):
     """
     """
-    buses = [n for n in es.nodes if isinstance(n, facades.Connection)]
+    buses = [n for n in es.nodes if isinstance(n, backend.Connection)]
     links = list()
     for b in buses:
         for i in b.inputs:
@@ -234,7 +246,7 @@ def write_results(es, m, p, **arguments):
     # -----------------------------------------------------------------------
     # transshipment / network export
     conns = _edges([n for n in es.nodes
-                    if isinstance(n, facades.Connection)])
+                    if isinstance(n, backend.Connection)])
 
     transshipment = pd.concat(
         [views.node(results, n, multiindex=True)['sequences'].\
@@ -260,7 +272,7 @@ def write_results(es, m, p, **arguments):
     # storage output
     storages = {
         n: views.node(results, n, multiindex=True)['sequences']
-        for n in es.nodes if isinstance(n, facades.Storage)}
+        for n in es.nodes if isinstance(n, backend.Storage)}
     storage_edges = _edges(storages.keys())
     for k, v in storages.items():
         # TODO: prettify column renaming
