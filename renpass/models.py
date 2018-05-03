@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 """
+import logging
 import pyomo.environ as po
 import components
 from pyomo.opt import SolverFactory
@@ -30,7 +31,6 @@ class DispatchModel(po.ConcreteModel):
 
         self.objective_function()
 
-        import pdb; pdb.set_trace()
 
     def demand_constraint(self):
         """
