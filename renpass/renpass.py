@@ -77,7 +77,7 @@ def create_energysystem(datapackage, **arguments):
         import facades as backend
     else:
         from oemof.energy_system import EnergySystem
-        from model import Model
+        from models import DispatchModel as Model
         import components as backend
 
     typemap = {

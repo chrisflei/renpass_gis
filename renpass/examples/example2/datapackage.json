@@ -1,6 +1,61 @@
 {   "name": "renpass-example",
     "profile": "tabular-data-package",
     "resources": [
+         {
+          "path": "data/elements/demands.csv",
+          "profile": "tabular-data-resource",
+          "name": "demands",
+          "format": "csv",
+          "mediatype": "text/csv",
+          "encoding": "utf-8",
+          "schema": {
+              "fields": [
+                  {
+                      "name": "name",
+                      "type": "string",
+                      "format": "default"
+                  },
+                  {
+                      "name": "amount",
+                      "type": "number",
+                      "format": "default"
+                  },
+                  {
+                      "name": "profile",
+                      "type": "string",
+                      "format": "default"
+                  },
+                  {
+                      "name": "type",
+                      "type": "string",
+                      "format": "default"
+                  },
+                  {
+                      "name": "bus",
+                      "type": "string",
+                      "format": "default"
+                  }
+              ],
+              "foreignKeys": [
+                    {
+                        "fields": "bus",
+                        "reference": {
+                            "fields": "name",
+                            "resource": "bus"
+                        }
+                    },
+                    {
+                        "fields": "profile",
+                        "reference": {
+                            "resource": "demand-profiles"
+                        }
+                    }
+              ],
+              "missingValues": [
+                  ""
+              ]
+          }
+        },
         {
             "path": "data/elements/generators.csv",
             "profile": "tabular-data-resource",
