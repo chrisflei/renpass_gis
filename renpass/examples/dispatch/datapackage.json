@@ -1,6 +1,130 @@
 {   "name": "renpass-example",
     "profile": "tabular-data-package",
     "resources": [
+      {
+          "path": "data/elements/connections.csv",
+          "profile": "tabular-data-resource",
+          "name": "connections",
+          "format": "csv",
+          "mediatype": "text/csv",
+          "encoding": "utf-8",
+          "schema": {
+              "fields": [
+                  {
+                      "name": "name",
+                      "type": "string",
+                      "format": "default"
+                  },
+                  {
+                      "name": "type",
+                      "type": "string",
+                      "format": "default"
+                  },
+                  {
+                      "name": "capacity",
+                      "type": "number",
+                      "format": "default"
+                  },
+                  {
+                      "name": "investment_cost",
+                      "type": "number",
+                      "format": "default"
+                  },
+                  {
+                      "name": "loss",
+                      "type": "number",
+                      "format": "default"
+                  },
+                  {
+                      "name": "from_bus",
+                      "type": "string",
+                      "format": "default"
+                  },
+                  {
+                      "name": "to_bus",
+                      "type": "string",
+                      "format": "default"
+                  }
+              ],
+              "foreignKeys": [
+                    {
+                        "fields": "from_bus",
+                        "reference": {
+                            "fields": "name",
+                            "resource": "bus"
+                        }
+                    },
+                    {
+                        "fields": "to_bus",
+                        "reference": {
+                            "fields": "name",
+                            "resource": "bus"
+                        }
+                    }],
+              "missingValues": [
+                  ""
+              ]
+          }
+      },
+      {
+          "path": "data/elements/storages.csv",
+          "profile": "tabular-data-resource",
+          "name": "storages",
+          "format": "csv",
+          "mediatype": "text/csv",
+          "encoding": "utf-8",
+          "schema": {
+              "fields": [
+                  {
+                      "name": "name",
+                      "type": "string",
+                      "format": "default"
+                  },
+                  {
+                      "name": "capacity",
+                      "type": "number",
+                      "format": "default"
+                  },
+                  {
+                      "name": "power",
+                      "type": "number",
+                      "format": "default"
+                  },
+                  {
+                      "name": "investment_cost",
+                      "type": "number",
+                      "format": "default"
+                  },
+                  {
+                      "name": "ep_ratio",
+                      "type": "number",
+                      "format": "default"
+                  },
+                  {
+                      "name": "type",
+                      "type": "string",
+                      "format": "default"
+                  },
+                  {
+                      "name": "bus",
+                      "type": "string",
+                      "format": "default"
+                  }
+              ],
+              "foreignKeys": [
+                    {
+                        "fields": "bus",
+                        "reference": {
+                            "fields": "name",
+                            "resource": "bus"
+                        }
+                    }
+              ],
+              "missingValues": [
+                  ""
+              ]
+          }
+      },
          {
           "path": "data/elements/storages.csv",
           "profile": "tabular-data-resource",

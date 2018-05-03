@@ -103,7 +103,7 @@ class Generator(Source, Facade):
         self.investment_cost = kwargs.get('investment_cost')
 
         self.output = self.bus
-        
+
         self.outputs.update({self.bus: None})
 
 
@@ -134,7 +134,47 @@ class Demand(Sink, Facade):
         self.inputs.update({self.bus: None})
 
 
-class Storage(Transformer, Facade):
+class Connection(Transformer, Facade):
+    """ Bi-direction connection for two buses (e.g. to model transshipment)
+
+    Parameters
+    ----------
+    from_bus: oemof.solph.Bus
+        An oemof bus instance where the connection unit is connected to with
+        its input.
+    to_bus: oemof.solph.Bus
+        An oemof bus instance where the connection unit is connected to with
+        its output.
+    capacity: numeric
+        The maximal capacity (output side each) of the unit. If not set, attr
+        `investment_cost` needs to be set.
+    loss:
+        Relative loss through the connection (default: 0)
+    investment_cost: numeric
+        Investment costs per unit of output capacity.
+        If capacity is not set, this value will be used for optimizing the
+        chp capacity.
+    """
+    required = ['from_bus', 'to_bus']
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.from_bus = kwargs.get('from_bus')
+
+        self.capacity = kwargs.get('capacity')
+
+        self.to_bus = kwargs.get('to_bus')
+
+        self.loss = kwargs.get('loss', 0)
+
+        self.investment_cost = kwargs.get('investment_cost')
+
+        self.inputs.update({self.from_bus: None})
+
+        self.outputs.update({self.to_bus: None})
+
+
+class Storage(Source, Facade):
     """ Storage unit
 
     Parameters
@@ -172,11 +212,5 @@ class Storage(Transformer, Facade):
         self.efficiency = kwargs.get('efficiency', 1)
 
         self.bus = kwargs.get('bus')
-
-        self.input = self.bus
-
-        self.output = self.bus
-
-        self.inputs.update({self.bus: None})
 
         self.outputs.update({self.bus: None})

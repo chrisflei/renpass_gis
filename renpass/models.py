@@ -29,15 +29,15 @@ class DispatchModel(po.ConcreteModel):
 
         self.storage_constraint()
 
-        self.objective_function()
+        self.link_constraint()
 
+        self.objective_function()
 
     def demand_constraint(self):
         """
         """
         self.demands = [n for n in self.nodes
                    if isinstance(n, components.Demand)]
-
 
         for d in self.demands:
             if d.amount is None:
@@ -49,6 +49,26 @@ class DispatchModel(po.ConcreteModel):
                     for t in self.timeindex:
                         self.flow[i, d, t].value = d.amount * d.profile[0]
                         self.flow[i, d, t].fix()
+
+    def link_constraint(self):
+        """
+        """
+        self.links = [l for l in self.nodes
+                      if isinstance(l, components.Connection)]
+
+        def _links(m):
+            for t in m.timeindex:
+                for l in m.links:
+                    self.flow[l.from_bus, l, t].setlb(-l.capacity)
+                    self.flow[l.from_bus, l, t].setub(l.capacity)
+                    self.flow[l, l.to_bus, t].setlb(-l.capacity)
+                    self.flow[l, l.to_bus, t].setub(l.capacity)
+                    expr = (m.flow[l.from_bus, l, t] == m.flow[l, l.to_bus, t])
+                    m.links_constraint.add((l, t), expr)
+        self.links_constraint = po.Constraint(
+            self.links, self.timeindex, noruleinit=True)
+        self.links_build = po.BuildAction(rule=_links)
+
 
     def storage_constraint(self):
         """
@@ -65,14 +85,16 @@ class DispatchModel(po.ConcreteModel):
         def _storage_balance(m):
             for s in self.storages:
                 for t in m.timeindex:
+                    self.flow[s, s.bus, t].setlb(-s.power)
+                    self.flow[s, s.bus, t].setub(s.power)
                     if t == m.timeindex[0]:
                         expr = (m.storage_capacity[s, t] ==
                                 m.storage_capacity[s, m.timeindex[-1]])
                     else:
                         lhs = 0
                         lhs += m.storage_capacity[s, t]
-                        lhs += - m.storage_capacity[s, t-1]
-                        lhs += - m.flow[s.input, s, t] +  m.flow[s, s.output, t]
+                        lhs += - m.storage_capacity[s, t-1] * s.loss
+                        lhs += m.flow[s, s.bus, t] * s.efficiency
                         expr = (lhs == 0)
                     m.storage_balance.add((s, t), expr)
         self.storage_balance = po.Constraint(self.storages, self.timeindex,
