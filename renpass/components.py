@@ -10,8 +10,6 @@ class Reservoir():
 class ExtractionTurbine():
     pass
 
-class Storage():
-    pass
 
 class Backpressure():
     pass
@@ -104,6 +102,8 @@ class Generator(Source, Facade):
 
         self.investment_cost = kwargs.get('investment_cost')
 
+        self.output = self.bus
+        
         self.outputs.update({self.bus: None})
 
 
@@ -132,3 +132,51 @@ class Demand(Sink, Facade):
         self.profile = kwargs.get('profile')
 
         self.inputs.update({self.bus: None})
+
+
+class Storage(Transformer, Facade):
+    """ Storage unit
+
+    Parameters
+    ----------
+    bus: oemof.solph.Bus
+        An oemof bus instance where the storage unit is connected to.
+    capacity: numeric
+        The total capacity of the storage (e.g. in MWh)
+    power: numeric
+        Max in/out power of storage. Either set this attribute OR `c_rate`.
+        If you do not specify `capacity` and set `investment_cost`, use
+        `c_rate` instead of power
+    ep_ratio: numeric (optional)
+        Ratio between energy and power output of the storage. Needs to be
+        set if attr `investment_cost` is set.
+    investment_cost: numeric
+        Investment costs for the storage unit e.g in €/MWh-capacity
+    """
+    required = ['bus']
+
+    def __init__(self, *args, **kwargs):
+
+        super().__init__(*args, **kwargs)
+
+        self.capacity = kwargs.get('capacity')
+
+        self.power = kwargs.get('power')
+
+        self.nominal_capacity = self.capacity
+
+        self.investment_cost = kwargs.get('investment_cost')
+
+        self.loss = kwargs.get('loss', 0)
+
+        self.efficiency = kwargs.get('efficiency', 1)
+
+        self.bus = kwargs.get('bus')
+
+        self.input = self.bus
+
+        self.output = self.bus
+
+        self.inputs.update({self.bus: None})
+
+        self.outputs.update({self.bus: None})
