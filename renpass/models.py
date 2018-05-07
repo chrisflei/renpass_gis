@@ -74,19 +74,18 @@ class DispatchModel(po.ConcreteModel):
         """
         """
         self.storages = [n for n in self.nodes
-                    if isinstance(n, components.Storage)]
-
-        def _capacity_bounds(m, s, t):
-            return (0, s.capacity)
+                         if isinstance(n, components.Storage)]
 
         self.storage_capacity = po.Var(
-            self.storages, self.timeindex, bounds=_capacity_bounds)
+            self.storages, self.timeindex, within=po.NonNegativeReals)
 
-        def _storage_balance(m):
+        self.storage_capacity_installed = po.Var(
+                [s for s in self.storages if s.capacity is None],
+                within=po.NonNegativeReals)
+
+        def _storage_constraints(m):
             for s in self.storages:
                 for t in m.timeindex:
-                    self.flow[s, s.bus, t].setlb(-s.power)
-                    self.flow[s, s.bus, t].setub(s.power)
                     if t == m.timeindex[0]:
                         expr = (m.storage_capacity[s, t] ==
                                 m.storage_capacity[s, m.timeindex[-1]])
@@ -97,9 +96,31 @@ class DispatchModel(po.ConcreteModel):
                         lhs += m.flow[s, s.bus, t] * s.efficiency
                         expr = (lhs == 0)
                     m.storage_balance.add((s, t), expr)
-        self.storage_balance = po.Constraint(self.storages, self.timeindex,
-                                             noruleinit=True)
-        self.storage_balance_build = po.BuildAction(rule=_storage_balance)
+
+                    if s.capacity is None:
+                        m.storage_capacity_limit.add((s,t),
+                            self.storage_capacity[s, t] <=
+                            self.storage_capacity_installed[s])
+
+                        self.storage_power_limit.add((s,t),
+                            self.flow[s, s.bus, t] / s.ep_ratio <=
+                            self.storage_capacity_installed[s])
+
+                    else:
+                        self.flow[s, s.bus, t].setlb(-s.power)
+                        self.flow[s, s.bus, t].setub(s.power)
+                        m.storage_capacity[s, t].setub(s.capacity)
+
+        self.storage_power_limit = po.Constraint(
+            self.storages, self.timeindex, noruleinit=True)
+
+        self.storage_capacity_limit = po.Constraint(
+            self.storages, self.timeindex, noruleinit=True)
+
+        self.storage_balance = po.Constraint(
+            self.storages, self.timeindex, noruleinit=True)
+
+        self.storage_constraints = po.BuildAction(rule=_storage_constraints)
 
     def generator_constraint(self):
         """
@@ -147,10 +168,13 @@ class DispatchModel(po.ConcreteModel):
         """
         """
         def _objective_function(self):
-            return sum(
-                g.marginal_cost * self.flow[g, g.output, t]
-                for g in self.generators
-                for t in self.timeindex)
+            expr = 0
+            expr += sum(g.marginal_cost * self.flow[g, g.output, t]
+                        for g in self.generators
+                        for t in self.timeindex)
+            expr += sum(s.investment_cost * self.storage_capacity_installed[s]
+                        for s in self.storages if s.capacity is None)
+            return expr
         self.objective_function = po.Objective(rule=_objective_function)
 
     def solve(self, solver='cbc', solver_io='lp', **kwargs):
